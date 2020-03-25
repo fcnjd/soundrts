@@ -6,32 +6,32 @@ try:
 except ImportError:
     from md5 import md5
 import os.path
-import Queue
+import queue
 import random
 import re
 import string
 import time
 
-from lib import chronometer as chrono
-from lib import collision
-from definitions import rules, get_ai_names, load_ai, VIRTUAL_TIME_INTERVAL
-from lib.log import warning, exception, info
-from lib.nofloat import to_int, int_distance, PRECISION
-import msgparts as mp
-from paths import MAPERROR_PATH
-import res
-from worldability import Ability
-from worldclient import DummyClient
-from worldentity import COLLISION_RADIUS
-from worldexit import passage
-from worldorders import ORDERS_DICT
-from worldplayerbase import Player, normalize_cost_or_resources, A
-from worldplayercomputer import Computer
-from worldplayercomputer2 import Computer2
-from worldresource import Deposit, Meadow
-from worldroom import Square
-from worldunit import Unit, Worker, Soldier, Building, _Building, Effect, ground_or_air
-from worldupgrade import Upgrade
+from .lib import chronometer as chrono
+from .lib import collision
+from .definitions import rules, get_ai_names, load_ai, VIRTUAL_TIME_INTERVAL
+from .lib.log import warning, exception, info
+from .lib.nofloat import to_int, int_distance, PRECISION
+from . import msgparts as mp
+from .paths import MAPERROR_PATH
+from . import res
+from .worldability import Ability
+from .worldclient import DummyClient
+from .worldentity import COLLISION_RADIUS
+from .worldexit import passage
+from .worldorders import ORDERS_DICT
+from .worldplayerbase import Player, normalize_cost_or_resources, A
+from .worldplayercomputer import Computer
+from .worldplayercomputer2 import Computer2
+from .worldresource import Deposit, Meadow
+from .worldroom import Square
+from .worldunit import Unit, Worker, Soldier, Building, _Building, Effect, ground_or_air
+from .worldupgrade import Upgrade
 
 
 GLOBAL_FOOD_LIMIT = 80
@@ -50,7 +50,7 @@ class Type(object):
 
     def init_dict(self, target):
         target.type_name = self.type_name
-        for k, v in self.dct.items():
+        for k, v in list(self.dct.items()):
             if k == "class":
                 continue
             if (hasattr(self.cls, k) or
@@ -109,7 +109,7 @@ class World(object):
         self.unit_classes = {}
         self.objects = {}
         self.harm_target_types = {}
-        self._command_queue = Queue.Queue()
+        self._command_queue = queue.Queue()
 
         # "map" properties
 
@@ -160,7 +160,7 @@ class World(object):
 
     def __setstate__(self, dict):
         self.__dict__.update(dict)
-        self._command_queue = Queue.Queue()
+        self._command_queue = queue.Queue()
 
     def remove_links_for_savegame(self): # avoid pickle recursion problem
         for z in self.squares:
@@ -205,14 +205,14 @@ class World(object):
     def get_objects(self, x, y, radius, filter=lambda x: True):
         radius_2 = radius * radius
         return [o for z in self.squares for o in z.objects
-                if filter(o) and square_of_distance(x, y, o.x, o.y) <= radius_2]
+                if list(filter(o)) and square_of_distance(x, y, o.x, o.y) <= radius_2]
 
     def get_objects2(self, x, y, radius, filter=lambda x: True, players=None):
         if not players:
             players = self.players
         radius_2 = radius * radius
         return [o for p in players for o in p._potential_neighbors(x, y)
-                if filter(o) and square_of_distance(x, y, o.x, o.y) <= radius_2]
+                if list(filter(o)) and square_of_distance(x, y, o.x, o.y) <= radius_2]
 
     def get_place_from_xy(self, x, y):
         return self.grid.get((x / self.square_width,
@@ -448,7 +448,7 @@ class World(object):
 
         At the moment, unit_classes contains also: upgrades, abilities...
         """
-        if not self.unit_classes.has_key(s):
+        if s not in self.unit_classes:
             try:
                 base = self.unit_base_classes[rules.get(s, "class")[0]]
             except:
@@ -532,7 +532,7 @@ class World(object):
 
     def _meadows(self):
         m = []
-        for square in sorted([x for x in self.grid.keys() if isinstance(x, str)]):
+        for square in sorted([x for x in list(self.grid.keys()) if isinstance(x, str)]):
             m.extend([square] * self.nb_meadows_by_square)
         m.extend(self.additional_meadows)
         for square in self.remove_meadows:
@@ -564,7 +564,7 @@ class World(object):
             col = 0
             is_a_portal = True
         j = t[col] + i[1:]
-        if not self.grid.has_key(j):
+        if j not in self.grid:
             map_error("", "The west-east passage starting from %s doesn't exist." % i)
         return self.grid[i].east_side(), self.grid[j].west_side(), is_a_portal
 
@@ -575,7 +575,7 @@ class World(object):
             line = 1
             is_a_portal = True
         j = i[0] + str(line)
-        if not self.grid.has_key(j):
+        if j not in self.grid:
             map_error("", "The south-north passage starting from %s doesn't exist." % i)
         return self.grid[i].north_side(), self.grid[j].south_side(), is_a_portal
 
@@ -863,7 +863,7 @@ class World(object):
             self.map = map
             self.square_width = int(self.square_width * PRECISION)
             self._build_map()
-        except MapError, msg:
+        except MapError as msg:
             warning("map error: %s", msg)
             self.map_error = "map error: %s" % msg
             return False
@@ -985,7 +985,7 @@ class World(object):
                 squares = _sorted(s.name for s in set(self.grid.values()) for o in s.objects if o.type_name == t and o.qty / PRECISION == q)
                 f.write("%s %s %s\n" % (t, q, " ".join(squares)))
             f.write("\nnb_meadows_by_square 0\n")
-            for n in sorted(set([s.nb_meadows for s in self.grid.values() if s.nb_meadows])):
+            for n in sorted(set([s.nb_meadows for s in list(self.grid.values()) if s.nb_meadows])):
                 squares = _sorted([s.name for s in set(self.grid.values()) if s.nb_meadows == n])
                 if n == 1:
                     f.write("; 1 meadow\n")
@@ -994,7 +994,7 @@ class World(object):
                 for _ in range(n):
                     f.write("additional_meadows %s\n" % " ".join(squares))
             f.write("\n")
-            for t in sorted(set([s.type_name for s in self.grid.values() if s.type_name])):
+            for t in sorted(set([s.type_name for s in list(self.grid.values()) if s.type_name])):
                 squares = _sorted([s.name for s in set(self.grid.values()) if s.type_name == t])
                 f.write("terrain %s %s\n" % (t, " ".join(squares)))
             squares = _sorted([s.name for s in set(self.grid.values()) if s.high_ground])
@@ -1005,12 +1005,12 @@ class World(object):
             f.write("ground %s\n" % " ".join(squares))
             squares = _sorted([s.name for s in set(self.grid.values()) if not s.is_air])
             f.write("no_air %s\n" % " ".join(squares))
-            for t in sorted(set([s.terrain_cover for s in self.grid.values() if s.terrain_cover != (0, 0)])):
+            for t in sorted(set([s.terrain_cover for s in list(self.grid.values()) if s.terrain_cover != (0, 0)])):
                 squares = _sorted([s.name for s in set(self.grid.values()) if s.terrain_cover == t])
-                f.write("cover %s %s\n" % (" ".join(map(lambda x: str(x / 100.0), t)), " ".join(squares)))
-            for t in sorted(set([s.terrain_speed for s in self.grid.values() if s.terrain_speed != (100, 100)])):
+                f.write("cover %s %s\n" % (" ".join([str(x / 100.0) for x in t]), " ".join(squares)))
+            for t in sorted(set([s.terrain_speed for s in list(self.grid.values()) if s.terrain_speed != (100, 100)])):
                 squares = _sorted([s.name for s in set(self.grid.values()) if s.terrain_speed == t])
-                f.write("speed %s %s\n" % (" ".join(map(lambda x: str(x / 100.0), t)), " ".join(squares)))
+                f.write("speed %s %s\n" % (" ".join([str(x / 100.0) for x in t]), " ".join(squares)))
             f.write("\n")
             we = dict()
             sn = dict()

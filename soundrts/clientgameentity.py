@@ -3,16 +3,16 @@ import time
 
 import pygame
 
-from clientgamenews import must_be_said
-from clientmedia import voice, sounds, get_fullscreen
-import config
-from definitions import style
-from lib.log import warning, exception
-from lib.msgs import nb2msg
-from lib.nofloat import PRECISION
-from worldunit import BuildingSite
-from lib.sound import psounds, distance
-import msgparts as mp
+from .clientgamenews import must_be_said
+from .clientmedia import voice, sounds, get_fullscreen
+from . import config
+from .definitions import style
+from .lib.log import warning, exception
+from .lib.msgs import nb2msg
+from .lib.nofloat import PRECISION
+from .worldunit import BuildingSite
+from .lib.sound import psounds, distance
+from . import msgparts as mp
 
 
 # minimal interval (in seconds) between 2 sounds
@@ -84,7 +84,7 @@ class EntityView(object):
     def __getstate__(self):
         odict = self.__dict__.copy() # copy the dict since we change it
         for k in ("loop_source", "repeat_source"):
-            if odict.has_key(k):
+            if k in odict:
                 del odict[k] # remove Sound entry
         return odict
 
@@ -540,4 +540,4 @@ class EntityView(object):
             voice.info(substitute_args(self.get_style("added_msg"), [self.ext_title]))
 
 
-from clientgameorder import OrderView, get_orders_list
+from .clientgameorder import OrderView, get_orders_list

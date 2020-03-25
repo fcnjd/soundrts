@@ -10,4 +10,4 @@ import pytest
 
 # note: "--capture=sys" is necessary to run in IDLE
 pytest.main("soundrts/tests --capture=sys")
-raw_input("[press ENTER to quit]")
+input("[press ENTER to quit]")

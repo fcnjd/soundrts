@@ -3,16 +3,16 @@ import inspect
 import re
 import string
 
-from definitions import rules, style, MAX_NB_OF_RESOURCE_TYPES
-from lib import group
-from lib.log import info, warning, exception
-from lib.msgs import encode_msg, nb2msg
-from lib.nofloat import square_of_distance, to_int, PRECISION
-import msgparts as mp
-from worldentity import NotEnoughSpaceError, Entity
-from worldresource import Corpse
-from worldunit import BuildingSite, Soldier
-from worldupgrade import Upgrade
+from .definitions import rules, style, MAX_NB_OF_RESOURCE_TYPES
+from .lib import group
+from .lib.log import info, warning, exception
+from .lib.msgs import encode_msg, nb2msg
+from .lib.nofloat import square_of_distance, to_int, PRECISION
+from . import msgparts as mp
+from .worldentity import NotEnoughSpaceError, Entity
+from .worldresource import Corpse
+from .worldunit import BuildingSite, Soldier
+from .worldupgrade import Upgrade
 
 
 A = 12 * PRECISION # bucket side length
@@ -255,12 +255,12 @@ class Player(object):
         self.observed_before_squares.update(partially_observed_squares)
         # objects revealed by their actions
         for p in self.allied_vision:
-            for o in p.observed_objects.keys():
+            for o in list(p.observed_objects.keys()):
                 # remove old observed objects and deleted objects
                 if (p.observed_objects[o] < self.world.time
                     or o.place is None):
                     del p.observed_objects[o]
-            self.perception.update(p.observed_objects.keys())
+            self.perception.update(list(p.observed_objects.keys()))
         # sight
         for p in self.world.players:
             if p in self.allied_vision:
@@ -378,7 +378,7 @@ class Player(object):
                     u.actual_speed = max(u.actual_speed , VERY_SLOW) # never stuck
             except:
                 u.actual_speed = u.speed
-        for g in self.groups.values():
+        for g in list(self.groups.values()):
             if g:
                 actual_speed = min(u.actual_speed for u in g)
                 for u in g:
@@ -621,7 +621,7 @@ class Player(object):
     def lang_order(self, args):
         select, orders = args
         for x in select:
-            if self.world.grid.has_key(x):
+            if x in self.world.grid:
                 default_square = x
                 multiplicator = 1
             elif re.match("[0-9]+$", x):
@@ -670,7 +670,7 @@ class Player(object):
         sq = self.world.grid["a1"]
         multiplicator = 1
         for i in items:
-            if self.world.grid.has_key(i):
+            if i in self.world.grid:
                 sq = self.world.grid[i]
                 multiplicator = 1
             elif re.match("[0-9]+$", i):
@@ -817,13 +817,13 @@ class Player(object):
     def lang_add_objective(self, args):
         n = args[0]
         o = Objective(n, [int(x) for x in args[1:]])
-        if not self.objectives.has_key(n):
+        if n not in self.objectives:
             self.objectives[n] = o
             self.send_voice_important(mp.NEW_OBJECTIVE + o.description)
 
     def lang_objective_complete(self, args):
         n = args[0]
-        if self.objectives.has_key(n):
+        if n in self.objectives:
             self.send_voice_important(mp.OBJECTIVE_COMPLETE
                                       + self.objectives[n].description)
             del self.objectives[n]

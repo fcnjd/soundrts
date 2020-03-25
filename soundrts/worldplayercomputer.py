@@ -1,11 +1,11 @@
 import re
 
-from definitions import get_ai, rules
-from lib.log import info, warning, exception
-from version import IS_DEV_VERSION
-from worldplayerbase import Player
-from worldresource import Meadow, Deposit, Corpse
-from worldunit import Worker, BuildingSite, Soldier
+from .definitions import get_ai, rules
+from .lib.log import info, warning, exception
+from .version import IS_DEV_VERSION
+from .worldplayerbase import Player
+from .worldresource import Meadow, Deposit, Corpse
+from .worldunit import Worker, BuildingSite, Soldier
 from soundrts.lib.nofloat import PRECISION
 from soundrts.worldorders import UseOrder
 
@@ -491,7 +491,7 @@ class Computer(Player):
             if u.place not in starts: starts[u.place] = 1
             else: starts[u.place] += 1
         if starts:
-            return sorted(starts.items(), key=lambda x: (x[1], x[0].id))[-1][0]
+            return sorted(list(starts.items()), key=lambda x: (x[1], x[0].id))[-1][0]
 
     def build_or_train_or_upgradeto_or_summon(self, t, nb=1):
         if t.__class__ == str:

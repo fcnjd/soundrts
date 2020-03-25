@@ -5,15 +5,15 @@ except ImportError:
 import platform
 import sys
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
-from version import VERSION, IS_DEV_VERSION
-from metaserver import METASERVER_URL
-from lib import chronometer as chrono
-from lib.log import info, warning, exception
-from worldplayercomputer import Computer
-from worldplayercomputer2 import Computer2
-from worldplayerhuman import Human
+from .version import VERSION, IS_DEV_VERSION
+from .metaserver import METASERVER_URL
+from .lib import chronometer as chrono
+from .lib.log import info, warning, exception
+from .worldplayercomputer import Computer
+from .worldplayercomputer2 import Computer2
+from .worldplayerhuman import Human
 
 
 FIRST_FPCT = 1
@@ -30,8 +30,8 @@ def _unpack(player_orders):
 
 def send_error_to_metaserver(error_msg):
     try:
-        params = urllib.urlencode({"method": "add", "msg": error_msg})
-        urllib.urlopen(METASERVER_URL + "errors.php?%s" % params).read()
+        params = urllib.parse.urlencode({"method": "add", "msg": error_msg})
+        urllib.request.urlopen(METASERVER_URL + "errors.php?%s" % params).read()
     except:
         exception("could not send error message to web server")
 
@@ -51,7 +51,7 @@ class _Controller(object):
 
     @property
     def name(self):
-        from clientservermenu import name
+        from .clientservermenu import name
         return name(self.login)
 
     def __repr__(self):

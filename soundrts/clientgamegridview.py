@@ -2,11 +2,11 @@ from math import sin, cos, radians
 
 import pygame
 
-from lib.screen import get_screen, draw_line, draw_rect
-from lib.log import warning
-from lib.nofloat import square_of_distance
+from .lib.screen import get_screen, draw_line, draw_rect
+from .lib.log import warning
+from .lib.nofloat import square_of_distance
 
-from definitions import style
+from .definitions import style
 
 
 R = int(0.5 * 10)
@@ -48,7 +48,7 @@ class GridView(object):
                 elif sq not in self.interface.server.player.observed_squares:
                     color = (0, 0, 0)
                     continue
-                color = map(lambda x: min(x, 255), color)
+                color = [min(x, 255) for x in color]
                 draw_rect(color, self._get_rect_from_map_coords(xc, yc))
                 squares_to_view.append(sq)
         # walls
@@ -119,7 +119,7 @@ class GridView(object):
                                  (x - W + hp_prop * (2 * W) / 100, y - R - 2))
 
     def display_objects(self):
-        for o in self.interface.dobjets.values():
+        for o in list(self.interface.dobjets.values()):
             self.display_object(o)
             if o.place is None and not o.is_inside \
                and not (self.interface.already_asked_to_quit or
@@ -176,7 +176,7 @@ class GridView(object):
     def object_from_mousepos(self, pos):
         self._update_coefs()
         x, y = pos
-        for o in self.interface.dobjets.values():
+        for o in list(self.interface.dobjets.values()):
             xo, yo = self._object_coords(o)
             if square_of_distance(x, y, xo, yo) <= R2 + 1: # is + 1 necessary?
                 return o

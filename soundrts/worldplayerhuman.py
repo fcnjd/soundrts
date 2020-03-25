@@ -1,4 +1,4 @@
-from worldplayerbase import Player
+from .worldplayerbase import Player
 
 
 class Human(Player):

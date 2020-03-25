@@ -1,4 +1,4 @@
-from lib.nofloat import square_of_distance
+from .lib.nofloat import square_of_distance
 
 
 class Action:
